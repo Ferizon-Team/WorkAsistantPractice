@@ -1,0 +1,38 @@
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+import uvicorn
+from starlette.middleware.base import BaseHTTPMiddleware
+from pathlib import Path
+
+from src.api.v1.routers import main_router
+
+
+from src.models import user #Импорт для того что бы create_tables создала эту таблицу
+
+from src.logger import logger
+
+from src.api.middleware import log_middleware
+
+from src.core.database import database
+from src.core.config import settings
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting API...")
+    yield
+    logger.info("Shutdown API...")
+    await database.dispose_engine()
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(main_router)
+
+app.mount("/static", app=StaticFiles(directory=Path("src", "static")), name="static")
+app.add_middleware(BaseHTTPMiddleware, dispatch = log_middleware)
+
+
+
+
+
+if __name__ == '__main__':
+    uvicorn.run(app, host=settings.run.host,port=settings.run.port)
