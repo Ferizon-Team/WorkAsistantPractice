@@ -20,7 +20,7 @@ class S3Config(BaseSettings):
 
 
 class DataBaseConfig(BaseSettings):
-    echo : bool = False 
+    echo : bool = False
     echo_pool : bool = False
     max_overflow : int = 50
     pool_size : int = 10
