@@ -6,6 +6,10 @@ services:
             - "5432:5432"
         environment:
             DB_HOST: postgres
+            POSTGRES_DB: ${DB_NAME:-database}
+            POSTGRES_USER: ${DB_USER:-postgres}
+            POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+            POSTGRES_HOST_AUTH_METHOD: trust
 
         env_file:
           - .env
