@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from src.core.config import settings
 #Импорт таблиц что бы они наследовали Base
-from src.models.user import User
+from src.models import *
 
 
 from src.core.database import Base

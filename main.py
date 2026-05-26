@@ -3,12 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
 from starlette.middleware.base import BaseHTTPMiddleware
-from pathlib import Path
 
 from src.api.v1.routers import main_router
-
-
-from src.models import user #Импорт для того что бы create_tables создала эту таблицу
 
 from src.logger import logger
 
@@ -27,7 +23,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(main_router)
 
-app.mount("/static", app=StaticFiles(directory=Path("src", "static")), name="static")
 app.add_middleware(BaseHTTPMiddleware, dispatch = log_middleware)
 
 
