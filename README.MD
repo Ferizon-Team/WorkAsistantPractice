@@ -1,7 +1,11 @@
 Запуск приложения происходит через docker compose
 
 ### Первый запуск
-    docker compose up --build
+1. Создаем .env файл со своими данными, или оставляем те что есть. Берем их из .env.example.
+2.
+```
+docker compose up --build
+```
 
 ### Все последующие
     docker compose up
