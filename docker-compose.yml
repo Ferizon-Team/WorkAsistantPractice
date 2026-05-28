@@ -54,6 +54,24 @@ services:
         volumes:
              - ./backend:/app
 
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        container_name: work_asistant_app_frontend
+        restart: always
+        ports:
+            - "3000:3000"
+        env_file:
+            - ./frontend/.env
+        environment:
+            - API_URL=http://localhost:8000
+            - WS_URL=ws://localhost:8000
+        depends_on:
+            - fastapi-app
+        networks:
+            - app_network
+
 networks:
     app_network:
         driver: bridge
