@@ -1,9 +1,12 @@
 services:
     postgres:
-        image: postgres:16
-        container_name: app_db
+        image: pgvector/pgvector:pg16
+        container_name: work_asistant_app_db
         ports:
             - "5432:5432"
+        dns:
+            - 8.8.8.8
+            - 8.8.4.4
         environment:
             DB_HOST: postgres
             POSTGRES_DB: ${DB_NAME:-database}
@@ -12,9 +15,10 @@ services:
             POSTGRES_HOST_AUTH_METHOD: trust
 
         env_file:
-          - .env
+          - ./backend/.env
         volumes:
             - postgres_data:/var/lib/postgresql/data
+            - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql
         networks:
             - app_network
         healthcheck:
@@ -25,17 +29,21 @@ services:
 
 
     fastapi-app:
-        build: .
-        container_name: app
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        container_name: work_asistant_app
         restart: always
         ports:
             - "8000:8000"
+        dns:
+            - 8.8.8.8
+            - 8.8.4.4
         env_file:
-            - .env
+            - ./backend/.env
         environment:
             DB_HOST: postgres
             REDIS_HOST: redis-db
-            APP_HOST : "0.0.0.0"
         depends_on:
             postgres:
                 condition: service_healthy
@@ -44,7 +52,7 @@ services:
             - app_network
 
         volumes:
-             - ./:/app
+             - ./backend:/app
 
 networks:
     app_network:

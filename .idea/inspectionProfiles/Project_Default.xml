@@ -1,0 +1,76 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="71" name="Python" />
+      </Languages>
+    </inspection_tool>
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="aioboto3" />
+          <option value="aiobotocore" />
+          <option value="aiofiles" />
+          <option value="aiohappyeyeballs" />
+          <option value="aiohttp" />
+          <option value="aioitertools" />
+          <option value="aiosignal" />
+          <option value="alembic" />
+          <option value="annotated-types" />
+          <option value="anyio" />
+          <option value="asyncpg" />
+          <option value="attrs" />
+          <option value="boto3" />
+          <option value="boto3-stubs" />
+          <option value="botocore" />
+          <option value="botocore-stubs" />
+          <option value="click" />
+          <option value="colorama" />
+          <option value="fastapi" />
+          <option value="frozenlist" />
+          <option value="greenlet" />
+          <option value="h11" />
+          <option value="idna" />
+          <option value="jmespath" />
+          <option value="Mako" />
+          <option value="MarkupSafe" />
+          <option value="multidict" />
+          <option value="mypy-boto3-s3" />
+          <option value="propcache" />
+          <option value="pydantic" />
+          <option value="pydantic-settings" />
+          <option value="pydantic_core" />
+          <option value="python-dateutil" />
+          <option value="python-dotenv" />
+          <option value="redis" />
+          <option value="s3transfer" />
+          <option value="six" />
+          <option value="sniffio" />
+          <option value="SQLAlchemy" />
+          <option value="starlette" />
+          <option value="types-awscrt" />
+          <option value="types-s3transfer" />
+          <option value="typing-inspection" />
+          <option value="typing_extensions" />
+          <option value="urllib3" />
+          <option value="uvicorn" />
+          <option value="wrapt" />
+          <option value="yarl" />
+          <option value="aiogram" />
+          <option value="certifi" />
+          <option value="dotenv" />
+          <option value="magic-filter" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="INFORMATION" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="E101" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="SqlNoDataSourceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+  </profile>
+</component>

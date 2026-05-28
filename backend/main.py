@@ -26,8 +26,3 @@ app.include_router(main_router)
 app.add_middleware(BaseHTTPMiddleware, dispatch = log_middleware)
 
 
-
-
-
-if __name__ == '__main__':
-    uvicorn.run(app, host=settings.run.host,port=settings.run.port)
