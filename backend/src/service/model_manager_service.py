@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 class ModelManager:
 	"""
 	Управление загрузкой и кэшированием моделей
-	Работает как в Docker, так и локально
 	"""
 
 	def __init__(self):

@@ -9,13 +9,6 @@ class SematicSearchResult(BaseModel):
 	metadata : dict | None = {}
 
 
-class HybridSearchResult(BaseModel):
-	title : str
-	text : str
-	semantic_similarity : float = Field(ge = 0, le = 1)
-	text_rank : float
-
-
 class LoadDocument(BaseModel):
 	title: str
 	text: str

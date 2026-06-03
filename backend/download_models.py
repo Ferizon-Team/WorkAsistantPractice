@@ -7,7 +7,7 @@ def main():
 	cache_dir = Path("./models")
 	cache_dir.mkdir(exist_ok = True)
 
-	print("📥 Downloading BGE-M3...")
+	print("Downloading BGE-M3...")
 	try:
 		from sentence_transformers import SentenceTransformer
 

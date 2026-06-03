@@ -62,6 +62,7 @@ class RAGService:
 				),
 				sources = [],
 				confidence = 0.0,
+				context_used = 0
 				)
 
 		context_parts = []

@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from src.api.dependencies import SessionDep, RagServiceDep
 from src.schemas.document import LoadDocument
+from src.schemas.rag import AnswerQuestionResponse
 
 
 router = APIRouter(prefix = "/document")
@@ -23,6 +24,22 @@ async def load_document(
         )
 
     return loaded_document
+
+@router.get("/request")
+async def send_request(
+        db_session : SessionDep,
+        rag_service: RagServiceDep,
+        question : str = Query(...)
+        ) -> AnswerQuestionResponse:
+
+    answer = await rag_service.answer_question(
+        session=db_session,
+        question = question,
+        category = None
+
+        )
+
+    return answer
 
 
 

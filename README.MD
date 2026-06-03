@@ -2,11 +2,15 @@
 
 ### Первый запуск
 1. Создаем .env файл со своими данными, или оставляем те что есть. Берем их из .env.example.
-2.
+2. Переходим в директорию backend и запускаем скрипт download_models.py
+3.
 ```
 docker compose up --build
 ```
-
+4. После запуска контейнеров
+```
+docker compose exec fastapi-app alembic upgrade head
+```
 ### Все последующие
     docker compose up
 

@@ -18,7 +18,7 @@ class ModelsConfig(BaseSettings):
         alias = "MODEL_CACHE_DIR"
         )
     ollama_host: str = Field(
-        default = "http://ollama:11434",
+        default = "ollama",
         alias = "OLLAMA_HOST"
         )
     ollama_model: str = Field(

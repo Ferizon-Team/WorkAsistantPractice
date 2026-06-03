@@ -8,6 +8,6 @@ class Source(BaseModel):
 class AnswerQuestionResponse(BaseModel):
 	answer: str
 	sources: list[Source] = []
-	confidence : float
-	context_used : int
+	confidence : float = 0
+	context_used : int = 0
 

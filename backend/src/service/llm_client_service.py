@@ -1,5 +1,10 @@
 import aiohttp
+import logging
 import json
+
+from src.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 class OllamaClientService:
 	def __init__(self,
@@ -94,6 +99,7 @@ class OllamaClientService:
 
 					if response.status != 200:
 						error_text = await response.text()
+						logger.error(f"Error while generate response: {error_text}")
 						return self._fallback_response()
 
 					result = await response.json()
@@ -102,10 +108,12 @@ class OllamaClientService:
 
 					return generated_text
 
-		except aiohttp.ClientError:
+		except aiohttp.ClientError as ex:
+			logger.error(f"Error while generate response: {ex}")
 			return self._fallback_response()
 
-		except Exception:
+		except Exception as ex:
+			logger.error(f"Error while generate response: {ex}")
 			return self._fallback_response()
 
 	@staticmethod
@@ -130,7 +138,7 @@ class OllamaClientService:
 
 
 llm_client = OllamaClientService(
-        base_url="http://localhost:11434",
-        model_name="qwen2.5:0.5b"
+        base_url=f"http://{settings.model.ollama_host}:11434",
+        model_name=settings.model.ollama_model,
     )
 

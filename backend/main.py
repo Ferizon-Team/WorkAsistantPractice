@@ -24,7 +24,6 @@ async def lifespan(app: FastAPI):
 
     if not await llm_client.check_health():
         await llm_client.pull_model()
-
     app.state.rag_service = RAGService(
         embedding_service = embedding_service,
         llm_client = llm_client,
