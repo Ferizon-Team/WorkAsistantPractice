@@ -110,3 +110,4 @@ class SearchRepository:
 			for row in result
 			]
 
+search_repository = SearchRepository()

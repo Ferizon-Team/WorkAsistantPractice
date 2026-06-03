@@ -37,10 +37,14 @@ class DocumentRepository:
 		chunk_objects = []
 
 		for i, (text, embedding) in enumerate(zip(chunks, embeddings)):
+			if isinstance(embedding, np.ndarray):
+				emb_list = embedding.flatten().tolist()  # <- гарантирует 1D
+			else:
+				emb_list = embedding
 			chunk = DocumentChunk(
 				document_id=document_id,
 				chunk_text = text,
-				embedding = embedding.tolist(),
+				embedding = emb_list,
 				chunk_index = i
 				)
 
@@ -94,3 +98,5 @@ class DocumentRepository:
 			return True
 
 		return False
+
+document_repository = DocumentRepository()

@@ -4,7 +4,12 @@ from contextlib import asynccontextmanager
 import uvicorn
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.api.v1.routers import main_router
+from src.service.rag_service import RAGService
+from src.service.embedding_model_service import embedding_service
+from src.repository.document.search_repository import search_repository
+from src.repository.document.document_repository import document_repository
+from src.service.llm_client_service import llm_client
+from src.api.routers import main_router
 
 from src.logger import logger
 
@@ -16,6 +21,16 @@ from src.core.config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting API...")
+
+    if not await llm_client.check_health():
+        await llm_client.pull_model()
+
+    app.state.rag_service = RAGService(
+        embedding_service = embedding_service,
+        llm_client = llm_client,
+        search_repository = search_repository,
+        document_repository = document_repository
+        )
     yield
     logger.info("Shutdown API...")
     await database.dispose_engine()

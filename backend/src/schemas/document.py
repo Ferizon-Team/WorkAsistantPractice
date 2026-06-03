@@ -14,3 +14,9 @@ class HybridSearchResult(BaseModel):
 	text : str
 	semantic_similarity : float = Field(ge = 0, le = 1)
 	text_rank : float
+
+
+class LoadDocument(BaseModel):
+	title: str
+	text: str
+	category: str | None = None
