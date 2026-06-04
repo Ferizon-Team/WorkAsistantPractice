@@ -23,7 +23,7 @@ class EmbeddingModelService:
             self.embedding_dim = self.model.get_embedding_dimension()
 
         else:
-            self.embedding_dim = 768
+            self.embedding_dim = 1024
         # self.model = SentenceTransformer(
         #     self.model_name,
         #     device = device,

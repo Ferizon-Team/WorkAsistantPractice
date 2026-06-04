@@ -22,7 +22,7 @@ class ModelsConfig(BaseSettings):
         alias = "OLLAMA_HOST"
         )
     ollama_model: str = Field(
-        default = "qwen2.5:0.5b",
+        default = "qwen2.5:3b",
         alias = "OLLAMA_MODEL"
         )
 
