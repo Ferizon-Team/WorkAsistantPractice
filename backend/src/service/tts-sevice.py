@@ -1,0 +1,119 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional, Protocol
+from uuid import uuid4
+
+from pydantic import BaseModel, Field
+
+
+class TTSModelProtocol(Protocol):
+  
+    def tts_to_file(self, text: str, file_path: str) -> None:
+        ...
+
+
+class TTSResult(BaseModel):
+
+    audio_path: str
+    file_name: str
+    format: str
+    text_length: int = Field(ge=0)
+
+
+class TTSError(Exception):
+    """
+    Базовая ошибка TTS-сервиса.
+    """
+    pass
+
+
+class TTSModelNotLoadedError(TTSError):
+    """
+    Ошибка, если TTS-модель не была передана в сервис.
+    """
+    pass
+
+
+class TTSSynthesisError(TTSError):
+    """
+    Ошибка, если во время генерации аудио что-то пошло не так.
+    """
+
+    pass
+
+
+class TTSService:
+    """
+    Сервис Text-To-Speech.
+    Отвечает только за генерацию аудио из текста.
+    """
+
+    def __init__(
+        self,
+        model: Optional[TTSModelProtocol],
+        output_dir: str = "storage/tts",
+        audio_format: str = "wav",
+    ) -> None:
+        self.model = model
+        self.output_dir = Path(output_dir)
+        self.audio_format = audio_format
+
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    def synthesize(self, text: str, file_name: Optional[str] = None) -> TTSResult:
+        """
+        Args:
+            text: Текст, который нужно озвучить.
+            file_name: Необязательное имя файла. Если не передано,
+                сервис создаст уникальное имя автоматически.
+        """
+
+        if self.model is None:
+            raise TTSModelNotLoadedError("TTS model is not loaded")
+
+        normalized_text = self._validate_text(text)
+        output_path = self._build_output_path(file_name)
+
+        try:
+            self.model.tts_to_file(
+                text=normalized_text,
+                file_path=str(output_path),
+            )
+        except Exception as error:
+            raise TTSSynthesisError(
+                f"Failed to synthesize speech: {error}"
+            ) from error
+
+        return TTSResult(
+            audio_path=str(output_path),
+            file_name=output_path.name,
+            format=self.audio_format,
+            text_length=len(normalized_text),
+        )
+
+    def _validate_text(self, text: str) -> str:
+        """
+        Проверяет текст перед генерацией
+        """
+
+        normalized_text = text.strip()
+
+        if not normalized_text:
+            raise ValueError("Text for TTS synthesis cannot be empty")
+
+        return normalized_text
+
+    def _build_output_path(self, file_name: Optional[str] = None) -> Path:
+        """
+        путь для будущего аудиофайла
+
+        """
+
+        if file_name is None:
+            file_name = f"{uuid4()}.{self.audio_format}"
+
+        if not file_name.endswith(f".{self.audio_format}"):
+            file_name = f"{file_name}.{self.audio_format}"
+
+        return self.output_dir / file_name
