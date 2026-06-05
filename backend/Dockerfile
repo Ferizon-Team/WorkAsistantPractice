@@ -9,6 +9,7 @@ COPY pyproject.toml poetry.lock* ./
 RUN poetry config repositories.aliyun https://mirrors.aliyun.com/pypi/simple/
 RUN poetry config virtualenvs.create false
 
+ENV POETRY_HTTP_TIMEOUT=600
 RUN poetry install --no-interaction --no-ansi --no-root
 
 COPY . .

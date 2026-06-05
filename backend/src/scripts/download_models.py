@@ -21,6 +21,7 @@ def main():
 	except Exception as e:
 		print(f"❌ Download failed: {e}")
 		sys.exit(1)
+	install_tts_model()
 
 
 def install_tts_model() -> None:
