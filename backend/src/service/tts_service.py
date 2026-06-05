@@ -7,41 +7,12 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 
-class TTSModelProtocol(Protocol):
-  
-    def tts_to_file(self, text: str, file_path: str) -> None:
-        ...
+from src.schemas.tts_schema import TTSResult
 
-
-class TTSResult(BaseModel):
-
-    audio_path: str
-    file_name: str
-    format: str
-    text_length: int = Field(ge=0)
-
-
-class TTSError(Exception):
-    """
-    Базовая ошибка TTS-сервиса.
-    """
-    pass
-
-
-class TTSModelNotLoadedError(TTSError):
-    """
-    Ошибка, если TTS-модель не была передана в сервис.
-    """
-    pass
-
-
-class TTSSynthesisError(TTSError):
-    """
-    Ошибка, если во время генерации аудио что-то пошло не так.
-    """
-
-    pass
-
+from src.exceptions.tts_exceptions import (
+    TTSModelNotLoadedError,
+    TTSSynthesisError,
+)
 
 class TTSService:
     """

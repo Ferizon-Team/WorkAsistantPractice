@@ -46,6 +46,8 @@ def install_tts_model() -> None:
             model="silero_tts",
             language=language,
             speaker=model_id,
+            force_reload=True,
+            trust_repo=True,
         )
 
         metadata_path = tts_info_dir / "metadata.txt"
