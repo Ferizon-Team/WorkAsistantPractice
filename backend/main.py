@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
 from starlette.middleware.base import BaseHTTPMiddleware
+from faster_whisper import WhisperModel
 
 from src.service.rag_service import RAGService
 from src.service.embedding_model_service import embedding_service
@@ -19,6 +20,8 @@ from src.api.middleware import log_middleware
 from src.core.database import database
 from src.core.config import settings
 
+from src.service.stt_service import STTService
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting API...")
@@ -31,6 +34,9 @@ async def lifespan(app: FastAPI):
         search_repository = search_repository,
         document_repository = document_repository
         )
+    app.state.stt_service = STTService(
+    model=WhisperModel("base")
+    )
     yield
     logger.info("Shutdown API...")
     await database.dispose_engine()

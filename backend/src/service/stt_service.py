@@ -14,7 +14,7 @@ class STTService:
     аудио в текст
     """
 
-    def init(
+    def __init__(
         self,
         model: Optional[WhisperModel],
         temp_dir: str = "storage/stt",
