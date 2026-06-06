@@ -10,12 +10,6 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxtjs/color-mode'
   ],
-  
-  css: ['~/assets/css/main.css'],
 
-  runtimeConfig: {
-    public: {
-      apiUrl: process.env.API_BASE || 'http://localhost:8000',
-    },
-  },
+  
 })
