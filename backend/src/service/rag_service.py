@@ -34,9 +34,8 @@ class RAGService:
 		2. Если в контексте нет ответа, скажи: "Я не нашел эту информацию в базе знаний. Обратитесь в HR-отдел."
 		3. Не придумывай процедуры, правила или контакты, которых нет в документах
 		4. Если вопрос не по теме работы компании, вежливо откажись отвечать
-		5. Указывай источник информации (название документа)
-		6. Отвечай кратко и по делу, без лишних деталей.
-		7. Отвечай так как буд то перед тобой сидит тот кто задает вопрос. А ты тот кто отвечает. Без лишних служебных предложений и слов.
+		5. Отвечай по делу.
+		6. Отвечай так как буд то перед тобой сидит тот кто задает вопрос. А ты тот кто отвечает. Без лишних служебных предложений и слов.
 		"""
 
 	async def answer_question(self,
@@ -82,7 +81,7 @@ class RAGService:
 
 Вопрос сотрудника: {question}
 
-Дай точный не сухой ответ, используя только информацию из контекста выше. Обязательно в конце текста укажи использованные источники"""
+Дай точный не сухой ответ, используя только информацию из контекста выше"""
 
 		answer = await self.llm_client.generate(
 			prompt = prompt,
@@ -172,32 +171,18 @@ class RAGService:
 					) -> list:
 
 		paragraphs = text.split("\n\n")
-		print(paragraphs)
 		chunks = []
-		current_chunk = ""
 
 		for para in paragraphs:
-			para = 	para.strip()
+			para = para.strip()
 			if not para:
 				continue
 
-			if len(para) > max_chunk_size:
-				if current_chunk:
-					chunks.append(current_chunk.strip())
-					current_chunk = ""
-
+			if len(para) <= max_chunk_size:
+				chunks.append(para)
+			else:
 				sub_chunks = self._split_long_paragraph(para, max_chunk_size)
 				chunks.extend(sub_chunks)
-
-			elif len(current_chunk) + len(para) < max_chunk_size:
-				current_chunk += para + "\n\n"
-
-			else:
-				chunks.append(current_chunk.strip())
-				current_chunk = para + "\n\n"
-
-		if current_chunk:
-			chunks.append(current_chunk.strip())
 
 		return chunks
 
