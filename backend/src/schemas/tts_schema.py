@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 class TTSRequest(BaseModel):
     text: str
+    file_name: str | None = None
 
 
 class TTSResult(BaseModel):

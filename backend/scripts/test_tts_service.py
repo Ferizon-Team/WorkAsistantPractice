@@ -21,7 +21,7 @@ def main():
     )
 
     result = service.synthesize(
-        text="Кирилл аниме тянка Биби ждет тебя в бравл старсе заходи скорее",
+        text="Проверка tts модуля",
         file_name="real_tts_test",
     )
 
