@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from typing import Optional, Any
+from faster_whisper import WhisperModel
 
 from src.core.config import settings
 
@@ -36,6 +37,7 @@ class SileroTTSAdapter:
 
 
 class ModelManager:
+    
     """
     Управление загрузкой и кэшированием моделей.
     """
@@ -46,6 +48,7 @@ class ModelManager:
 
         self._bge_model = None
         self._tts_model = None
+        self._stt_model = None
 
         logger.info(f"Model cache: {self.cache_dir}")
 
@@ -116,6 +119,17 @@ class ModelManager:
         except Exception as e:
             logger.error(f"Failed to load Silero TTS: {e}")
             return None
+    
+    def get_stt_model(self):
+        if self._stt_model is not None:
+            return self._stt_model
 
+        self._stt_model = WhisperModel(
+            "base",
+            device="cpu",
+            compute_type="int8"
+        )
+        return self._stt_model
+    
 
 model_manager = ModelManager()

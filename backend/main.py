@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import uvicorn
 from starlette.middleware.base import BaseHTTPMiddleware
+from src.service.model_manager_service import model_manager
+
 
 from src.service.rag_service import RAGService
 from src.service.embedding_model_service import embedding_service
@@ -23,6 +25,8 @@ from src.service.tts_service import TTSService
 
 model_manager = ModelManager()
 
+from src.service.stt_service import STTService
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting API...")
@@ -35,6 +39,11 @@ async def lifespan(app: FastAPI):
         search_repository = search_repository,
         document_repository = document_repository
         )
+    
+    stt_model = model_manager.get_stt_model()
+    if stt_model is None:
+        raise RuntimeError("STT model failed to load")
+    app.state.stt_service = STTService(model=stt_model)
     
     tts_model = model_manager.get_tts_model()
     app.state.tts_service = TTSService(
