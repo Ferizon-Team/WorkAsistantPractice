@@ -123,9 +123,9 @@ class ModelManager:
     def get_stt_model(self):
         if self._stt_model is not None:
             return self._stt_model
-
+        model_path = Path("./models/whisper-base")
         self._stt_model = WhisperModel(
-            "base",
+            str(model_path),
             device="cpu",
             compute_type="int8"
         )

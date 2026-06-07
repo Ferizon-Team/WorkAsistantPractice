@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-
+from faster_whisper import WhisperModel
 
 def main():
     cache_dir = Path("./models")
@@ -22,6 +22,8 @@ def main():
         sys.exit(1)
 
     install_tts_model()
+    install_stt_model()
+
 
 
 def install_tts_model() -> None:
@@ -66,6 +68,20 @@ def install_tts_model() -> None:
         print(f"❌ TTS model download failed: {error}")
         sys.exit(1)
 
+def install_stt_model():
+    print("Downloading Whisper STT...")
+
+    from faster_whisper import WhisperModel
+    from pathlib import Path
+
+    model_dir = Path("./models/whisper-base")
+    model_dir.mkdir(parents=True, exist_ok=True)
+
+    WhisperModel(
+        "base",
+        download_root=str(model_dir)
+    )
+    print(f"Whisper saved to {model_dir}")
 
 if __name__ == "__main__":
     main()
