@@ -20,6 +20,10 @@ from src.api.middleware import log_middleware
 
 from src.core.database import database
 from src.core.config import settings
+from src.service.model_manager_service import ModelManager
+from src.service.tts_service import TTSService
+
+model_manager = ModelManager()
 
 from src.service.stt_service import STTService
 
@@ -40,8 +44,16 @@ async def lifespan(app: FastAPI):
     if stt_model is None:
         raise RuntimeError("STT model failed to load")
     app.state.stt_service = STTService(model=stt_model)
+    
+    tts_model = model_manager.get_tts_model()
+    app.state.tts_service = TTSService(
+        model=tts_model,
+        output_dir="storage/tts",
+        audio_format="wav",
+    )
 
     yield
+
     logger.info("Shutdown API...")
     await database.dispose_engine()
 
