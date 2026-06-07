@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-from faster_whisper import WhisperModel
 
 def main():
     cache_dir = Path("./models")
@@ -72,7 +71,6 @@ def install_stt_model():
     print("Downloading Whisper STT...")
 
     from faster_whisper import WhisperModel
-    from pathlib import Path
 
     model_dir = Path("./models/whisper-base")
     model_dir.mkdir(parents=True, exist_ok=True)
