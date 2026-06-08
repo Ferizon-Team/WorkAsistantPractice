@@ -2,8 +2,17 @@ import sys
 from pathlib import Path
 
 def main():
+
+    install_bge3_model()
+    install_tts_model()
+    install_stt_model()
+
+
+
+
+def install_bge3_model():
     cache_dir = Path("./models")
-    cache_dir.mkdir(exist_ok=True)
+    cache_dir.mkdir(exist_ok = True)
 
     print("Downloading BGE-M3...")
     try:
@@ -19,12 +28,6 @@ def main():
     except Exception as e:
         print(f"❌ Download failed: {e}")
         sys.exit(1)
-
-    install_tts_model()
-    install_stt_model()
-
-
-
 def install_tts_model() -> None:
     print("Downloading Silero TTS...")
 
@@ -70,14 +73,14 @@ def install_tts_model() -> None:
 def install_stt_model():
     print("Downloading Whisper STT...")
 
-    from faster_whisper import WhisperModel
+    from faster_whisper.utils import download_model
 
     model_dir = Path("./models/whisper-base")
     model_dir.mkdir(parents=True, exist_ok=True)
 
-    WhisperModel(
+    download_model(
         "base",
-        download_root=str(model_dir)
+        output_dir=str(model_dir)
     )
     print(f"Whisper saved to {model_dir}")
 

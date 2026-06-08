@@ -85,7 +85,7 @@ class ModelManager:
         if self._tts_model is not None:
             return self._tts_model
 
-        tts_cache_path = Path("./models") / "torch_hub"
+        tts_cache_path = self.cache_dir / "torch_hub"
 
         if not tts_cache_path.exists():
             logger.warning(f"Silero TTS cache not found: {tts_cache_path}")
@@ -123,7 +123,7 @@ class ModelManager:
     def get_stt_model(self):
         if self._stt_model is not None:
             return self._stt_model
-        model_path = Path("./models/whisper-base")
+        model_path = self.cache_dir / "whisper-base"
         self._stt_model = WhisperModel(
             str(model_path),
             device="cpu",

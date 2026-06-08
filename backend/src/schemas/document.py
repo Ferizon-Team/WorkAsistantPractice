@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 class SematicSearchResult(BaseModel):
+	id : int
 	title : str
 	text : str
 	category : str | None
