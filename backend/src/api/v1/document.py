@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from src.api.dependencies import SessionDep, RagServiceDep
+from src.api.dependencies import SessionDep, RagServiceDep, TTSServiceDep, STTServiceDep
 from src.schemas.document import LoadDocument
 from src.schemas.rag import AnswerQuestionResponse
 
@@ -29,7 +29,10 @@ async def load_document(
 async def send_request(
         db_session : SessionDep,
         rag_service: RagServiceDep,
-        question : str = Query(...)
+        tts_service: TTSServiceDep,
+        stt_service: STTServiceDep,
+        question : str = Query(...),
+
         ) -> AnswerQuestionResponse:
 
     answer = await rag_service.answer_question(

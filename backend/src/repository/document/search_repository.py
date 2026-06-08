@@ -40,6 +40,7 @@ class SearchRepository:
 		query = text(
 			f"""
 		            SELECT 
+		                ch.id,
 		                ch.chunk_text,
 		                ch.chunk_index,
 		                ch.metadata_json,
@@ -62,6 +63,7 @@ class SearchRepository:
 
 		return [
 			SematicSearchResult(
+				id = row.id,
 				text = row.chunk_text,
 				title = row.title,
 				category = row.category,

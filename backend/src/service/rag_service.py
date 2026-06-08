@@ -96,6 +96,7 @@ class RAGService:
 			answer = answer,
 			sources = [
 				Source(
+					id = chunk.id,
 					title = chunk.title,
 					similarity = round(chunk.similarity, 3),
 					snippet = chunk.text[:150] + "..." if len(chunk.text) > 150 else chunk.text

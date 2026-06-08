@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 class Source(BaseModel):
+	id : int
 	title: str
 	similarity : float
 	snippet : str

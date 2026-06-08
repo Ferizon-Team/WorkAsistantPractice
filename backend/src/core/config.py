@@ -42,7 +42,10 @@ class DataBaseConfig(BaseSettings):
     def url(self) -> str:
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db_name}"
     
-
+class RedisConfig(BaseSettings):
+    host : str = Field(alias="REDIS_HOST")
+    port : int = Field(alias="REDIS_PORT")
+    db : str = Field(alias="REDIS_DB")
 
 
 class Settings(BaseSettings):
