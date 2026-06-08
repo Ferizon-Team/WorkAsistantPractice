@@ -29,8 +29,6 @@ async def load_document(
 async def send_request(
         db_session : SessionDep,
         rag_service: RagServiceDep,
-        tts_service: TTSServiceDep,
-        stt_service: STTServiceDep,
         question : str = Query(...),
 
         ) -> AnswerQuestionResponse:
