@@ -63,7 +63,7 @@ class ModelManager:
                 from sentence_transformers import SentenceTransformer
 
                 logger.info("Loading BGE-M3 from cache...")
-                self._bge_model = SentenceTransformer(str(bge_path))
+                self._bge_model = SentenceTransformer(str(bge_path), device = "cpu")
                 logger.info("BGE-M3 loaded from cache")
                 return self._bge_model
 

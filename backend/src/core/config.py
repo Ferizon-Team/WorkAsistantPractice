@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     model : ModelsConfig = ModelsConfig()
     run : RunConfig = RunConfig()
     database : DataBaseConfig = DataBaseConfig()
+    cache : RedisConfig = RedisConfig()
 
 
 settings = Settings()

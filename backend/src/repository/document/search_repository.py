@@ -20,7 +20,7 @@ class SearchRepository:
 			session: AsyncSession,
 			query_embedding: np.ndarray,
 			top_k: int = 3,
-			min_similarity: float = 0.65,
+			min_similarity: float = 0.55,
 			category_filter : str | None = None,
 			) -> list[SematicSearchResult]:
 

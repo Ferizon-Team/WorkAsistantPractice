@@ -6,11 +6,10 @@ from redis.asyncio import Redis as AsyncRedis
 from src.core.config import settings
 
 
-@asynccontextmanager
 async def get_redis_client() -> AsyncGenerator[AsyncRedis, None]:
 	async with AsyncRedis(
-			host=settings.REDIS_HOST,
-			port=settings.REDIS_PORT,
-			db=settings.REDIS_DB) as redis:
+			host=settings.cache.host,
+			port=settings.cache.port,
+			db=settings.cache.db) as redis:
 
 		yield redis

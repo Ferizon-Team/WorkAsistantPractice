@@ -23,15 +23,7 @@ class EmbeddingModelService:
             self.embedding_dim = self.model.get_embedding_dimension()
 
         else:
-            self.embedding_dim = 1024
-        # self.model = SentenceTransformer(
-        #     self.model_name,
-        #     device = device,
-        #     model_kwargs = {
-        #         "torch_dtype": "float32",
-        #         "use_memory_efficient_attention": True
-        #         },
-        # )
+            raise FileNotFoundError("Model not found")
 
 
 

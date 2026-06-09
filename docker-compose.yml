@@ -93,7 +93,7 @@ services:
             - ./backend/.env
         environment:
             DB_HOST: postgres
-            REDIS_HOST: redis-db
+            REDIS_HOST: redis
         depends_on:
             postgres:
                 condition: service_healthy

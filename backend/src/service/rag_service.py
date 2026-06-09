@@ -1,3 +1,4 @@
+from redis.asyncio import Redis
 from torch.utils.hipify.hipify_python import InputError
 
 from src.service.embedding_model_service import EmbeddingModelService
@@ -39,10 +40,11 @@ class RAGService:
 		"""
 
 	async def answer_question(self,
-							  session : AsyncSession,
-							  question : str,
-							  category : str | None = None
-							  ) -> AnswerQuestionResponse:
+	                          redis_connect : Redis,
+	                          session : AsyncSession,
+	                          question : str,
+	                          category : str | None = None
+	                          ) -> AnswerQuestionResponse:
 
 		query_embedding = await self.embedding_service.encode_async(question)
 
@@ -66,6 +68,7 @@ class RAGService:
 				)
 
 		context_parts = []
+		chunk_ids = []
 		for chunk in relevant_chunks:
 			context_parts.append(
 				f"Документ: {chunk.title}\n"
@@ -73,6 +76,20 @@ class RAGService:
 				f"---"
 				)
 
+			chunk_ids.append(chunk.id)
+
+		#Сортируем chunk id что бы порядок всегда был одинаков
+		chunk_ids.sort()
+
+		#Генерируем ключ
+		cache_key = "answer:" + "".join([str(i) for i in chunk_ids])
+
+		cache_answer = await redis_connect.get(cache_key)
+
+		#Если результат в кеше то отдаем его
+		if cache_answer is not None:
+			answer_schema_cache = AnswerQuestionResponse.model_validate_json(cache_answer)
+			return answer_schema_cache
 		context = "\n".join(context_parts)
 		prompt = f"""
 Контекст из базы знаний компании:
@@ -92,7 +109,7 @@ class RAGService:
 
 		max_similarity = max(chunk.similarity for chunk in relevant_chunks)
 
-		return AnswerQuestionResponse(
+		answer_schema =  AnswerQuestionResponse(
 			answer = answer,
 			sources = [
 				Source(
@@ -107,6 +124,12 @@ class RAGService:
 			confidence = round(max_similarity, 3),
 			context_used = len(relevant_chunks)
 			)
+
+		#Сохраняем результат
+		ttl = 60 * 60 * 24
+		await redis_connect.set(cache_key, answer_schema.model_dump_json())
+
+		return answer_schema
 
 	async def load_document(self,
 							session : AsyncSession,

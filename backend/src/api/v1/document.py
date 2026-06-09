@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from src.api.dependencies import SessionDep, RagServiceDep, TTSServiceDep, STTServiceDep
+from src.api.dependencies import SessionDep, RagServiceDep, CacheDep
 from src.schemas.document import LoadDocument
 from src.schemas.rag import AnswerQuestionResponse
 
@@ -28,12 +28,14 @@ async def load_document(
 @router.get("/request")
 async def send_request(
         db_session : SessionDep,
+        redis_connect : CacheDep,
         rag_service: RagServiceDep,
         question : str = Query(...),
 
         ) -> AnswerQuestionResponse:
 
     answer = await rag_service.answer_question(
+        redis_connect = redis_connect,
         session=db_session,
         question = question,
         category = None

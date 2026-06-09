@@ -21,7 +21,7 @@ def get_stt_service(request: Request) -> STTService:
   
   
 SessionDep = Annotated[AsyncSession, Depends(database.get_session)]
-RedisDep = Annotated[AsyncRedis, Depends(get_redis_client)]
+CacheDep = Annotated[AsyncRedis, Depends(get_redis_client)]
 RagServiceDep = Annotated[RAGService, Depends(get_rag_service)]
 STTServiceDep = Annotated[STTService, Depends(get_stt_service)]
 TTSServiceDep = Annotated[TTSService, Depends(get_tts_service)]
