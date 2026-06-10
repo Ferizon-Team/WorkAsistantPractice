@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Fiel
+from pydantic import BaseModel, Field
 
 
 class SematicSearchResult(BaseModel):
