@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Fiel
+
 
 class SematicSearchResult(BaseModel):
 	id : int
@@ -14,3 +15,7 @@ class LoadDocument(BaseModel):
 	title: str
 	text: str
 	category: str | None = None
+
+class StreamTextChunk(BaseModel):
+	event : str
+	content : str | None = None

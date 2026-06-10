@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from src.api.dependencies import SessionDep, RagServiceDep, CacheDep
 from src.schemas.document import LoadDocument
 from src.schemas.rag import AnswerQuestionResponse
@@ -43,6 +43,35 @@ async def send_request(
         )
 
     return answer
+
+@router.websocket("/ws")
+async def websocket_endpoint(
+        websocket : WebSocket,
+        db_session : SessionDep,
+        redis_connect : CacheDep,
+        rag_service: RagServiceDep,
+        ):
+    await websocket.accept()
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+
+            if data.get('event') == "question":
+                async for chunk in rag_service.answer_question_stream(
+                    redis_connect = redis_connect,
+                    session = db_session,
+                    question = data.get('question'),
+                    category = None
+                        ):
+
+                    await websocket.send_json(chunk.model_dump_json())
+
+    except WebSocketDisconnect:
+        await websocket.close()
+
+
+
 
 
 
