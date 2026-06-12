@@ -4,7 +4,7 @@ import asyncio
 from redis.asyncio import Redis
 from torch.utils.hipify.hipify_python import InputError
 
-from schemas.document import StreamTextChunk
+from src.schemas.document import StreamTextChunk
 from src.service.embedding_model_service import EmbeddingModelService
 from src.service.llm_client_service import OllamaClientService
 from src.repository.document.document_repository import DocumentRepository
