@@ -2,16 +2,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir poetry
+RUN pip install --no-cache-dir uv
 
-COPY pyproject.toml poetry.lock* ./
+ENV UV_CACHE_DIR=/root/.cache/uv
+ENV PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
+ENV UV_SYSTEM_PYTHON=1
 
-RUN poetry config repositories.aliyun https://mirrors.aliyun.com/pypi/simple/
-RUN poetry config virtualenvs.create false
+COPY pyproject.toml uv.lock ./
 
-ENV POETRY_HTTP_TIMEOUT=600
-RUN poetry install --no-interaction --no-ansi --no-root --no-cache
+RUN uv pip install --system --no-cache -e .[ai]
 
 COPY . .
+
+# Проверка
+RUN python -c "from faster_whisper import WhisperModel; print('✓ faster_whisper installed')"
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

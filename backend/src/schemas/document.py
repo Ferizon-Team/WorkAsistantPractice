@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class SematicSearchResult(BaseModel):
 	id : int
 	title : str
@@ -14,3 +15,7 @@ class LoadDocument(BaseModel):
 	title: str
 	text: str
 	category: str | None = None
+
+class StreamTextChunk(BaseModel):
+	event : str
+	content : str | None = None

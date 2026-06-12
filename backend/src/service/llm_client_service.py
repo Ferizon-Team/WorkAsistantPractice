@@ -1,3 +1,5 @@
+from typing import AsyncGenerator
+
 import aiohttp
 import logging
 import json
@@ -115,6 +117,55 @@ class OllamaClientService:
 		except Exception as ex:
 			logger.error(f"Error while generate response: {ex}")
 			return self._fallback_response()
+
+
+	async def generate_stream(self,
+	                          prompt: str,
+	                          system_prompt: str | None = None,
+	                          temperature: float | None = None,
+	                          max_tokens: int | None = None,
+							  ) -> AsyncGenerator[str, None]:
+
+		if system_prompt:
+			full_prompt = f"<|im_start|>system\n{system_prompt}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
+		else:
+			full_prompt = f"<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
+
+		params = self.default_params.copy()
+		if temperature is not None:
+			params["temperature"] = temperature
+		if max_tokens is not None:
+			params["num_predict"] = max_tokens
+
+		payload = {
+			"model": self.model_name,
+			"prompt": full_prompt,
+			"stream": True,
+			**params
+			}
+
+
+		async with aiohttp.ClientSession() as session:
+			async with session.post(
+				self.endpoint_url,
+				json = payload,
+				timeout = aiohttp.ClientTimeout(total = 30)
+					) as response:
+
+				async for line in response.content:
+					if not line:
+						continue
+
+					data = json.loads(line)
+
+					if data.get("done"):
+						break
+
+					chunk = data.get("response", "")
+
+					if chunk:
+						yield chunk
+
 
 	@staticmethod
 	def _clean_response(text: str) -> str:

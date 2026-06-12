@@ -1,6 +1,10 @@
+from typing import AsyncGenerator
+import asyncio
+
 from redis.asyncio import Redis
 from torch.utils.hipify.hipify_python import InputError
 
+from src.schemas.document import StreamTextChunk
 from src.service.embedding_model_service import EmbeddingModelService
 from src.service.llm_client_service import OllamaClientService
 from src.repository.document.document_repository import DocumentRepository
@@ -127,9 +131,117 @@ class RAGService:
 
 		#Сохраняем результат
 		ttl = 60 * 60 * 24
-		await redis_connect.set(cache_key, answer_schema.model_dump_json())
+		await redis_connect.setex(cache_key, ttl, answer_schema.model_dump_json())
 
 		return answer_schema
+
+
+	async def answer_question_stream(self,
+	                                 redis_connect: Redis,
+	                                 session: AsyncSession,
+	                                 question: str,
+	                                 category: str | None = None
+	                                 ) -> AsyncGenerator[StreamTextChunk, None]:
+
+		query_embedding = await self.embedding_service.encode_async(question)
+
+		relevant_chunks = await self.search_repository.semantic_search(
+			session = session,
+			query_embedding = query_embedding,
+			top_k = 3,
+			min_similarity = 0.65,
+			category_filter = category
+			)
+
+		if not relevant_chunks:
+			yield StreamTextChunk(
+				event = "search.not_found",
+				content =
+					"Я не нашел эту информацию в базе знаний."
+					"Обратитесь в HR отдел"
+				)
+			return
+
+		context_parts = []
+		chunk_ids = []
+
+		for chunk in relevant_chunks:
+			context_parts.append(
+				f"Документ: {chunk.title}\n"
+				f"Содержание: {chunk.text}\n"
+				f"---"
+				)
+
+			chunk_ids.append(chunk.id)
+
+		# Сортируем chunk id что бы порядок всегда был одинаков
+		chunk_ids.sort()
+
+		# Генерируем ключ
+		cache_key = "answer:" + ":".join([str(i) for i in chunk_ids])
+
+		cache_answer = await redis_connect.get(cache_key)
+
+		if isinstance(cache_answer, bytes):
+			cache_answer = cache_answer.decode("utf-8")
+
+		# Если результат в кеше то отдаем его
+		if cache_answer is not None:
+
+			# Сигнал для фронта что бы структурировать сообщения
+			yield StreamTextChunk(
+				event = "llm.start",
+				)
+			for word in cache_answer.split():
+				yield StreamTextChunk(
+					event = "llm.token",
+					content = word + " "
+					)
+
+				await asyncio.sleep(0.4)
+
+			yield StreamTextChunk(
+				event = "llm.finish",
+				)
+			return
+
+		context = "\n".join(context_parts)
+		prompt = f"""
+		Контекст из базы знаний компании:
+
+		{context}
+
+		Вопрос сотрудника: {question}
+
+		Дай точный не сухой ответ, используя только информацию из контекста выше"""
+
+		#Сигнал для фронта что бы структурировать сообщения
+		yield StreamTextChunk(
+				event = "llm.start",
+				)
+		parts = []
+		async for chunk in self.llm_client.generate_stream(
+				prompt = prompt,
+				system_prompt = self.system_prompt,
+				temperature = 0.1,
+				max_tokens = 256,
+				):
+			parts.append(chunk)
+			yield chunk
+
+		yield StreamTextChunk(
+				event = "llm.finish",
+				)
+		full_answer = "".join(parts)
+
+		if full_answer.strip():
+			# Сохраняем результат
+			ttl = 60 * 60 * 24
+			await redis_connect.setex(cache_key, ttl, full_answer)
+
+
+
+
 
 	async def load_document(self,
 							session : AsyncSession,

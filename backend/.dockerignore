@@ -1,4 +1,57 @@
-.venv/
-.cache/
-__pycache__/
-.git/
+# Виртуальные окружения и кэш Python
+.venv
+venv
+env
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Git и система контроля версий
+.git
+.gitignore
+.gitattributes
+
+# Docker-специфичные файлы
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# Редакторы и IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Логи и временные файлы
+*.log
+*.tmp
+*.pid
+*.seed
+*.pid.lock
+
+# Документация и мета-файлы
+README.md
+LICENSE
+CONTRIBUTING.md
+.env
+.env.*
+!.env.example
+
+
+# Системные файлы OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Медиа-файлы (если не нужны в сборке)
+*.mp4
+*.mp3
+*.wav
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.pdf
