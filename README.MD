@@ -16,7 +16,7 @@ docker compose exec fastapi-app alembic upgrade head
     docker compose up
 
 ### Обновление зависимостей
-При установки пакетов через poetry нужно обновить сборку приложения так как там не будет новых зависимостей. 
+При установки пакетов через uv нужно обновить сборку приложения так как там не будет новых зависимостей. 
 ```
 docker compose build --no-cache fastapi-app
 ```
