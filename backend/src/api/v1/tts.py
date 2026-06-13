@@ -1,19 +1,19 @@
 import base64
 from pathlib import Path
-from fastapi import APIRouter, Request, HTTPException
 
+from fastapi import APIRouter, HTTPException
+
+from src.api.dependencies import TTSServiceDep
 from src.schemas.tts_schema import TTSRequest, TTSResponse
 
 router = APIRouter(prefix="/tts", tags=["TTS"])
 
 
 @router.post("/synthesize", response_model=TTSResponse, summary="Синтез речи из текста")
-async def synthesize_speech(request: Request, body: TTSRequest):
+async def synthesize_speech(body: TTSRequest, tts_service: TTSServiceDep):
     """
     Принимает текст, генерирует аудио через TTSService и возвращает его в формате base64.
     """
-    tts_service = request.app.state.tts_service
-
     try:
         # 1. Вызываем сервис
         result = tts_service.synthesize(

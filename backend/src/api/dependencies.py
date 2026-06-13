@@ -10,6 +10,7 @@ from src.service.stt_service import STTService
 from src.service.tts_service import TTSService
 from src.core.cache import get_redis_client
 
+
 def get_rag_service(request : Request) -> RAGService:
     return request.app.state.rag_service
 
