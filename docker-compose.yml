@@ -103,11 +103,9 @@ services:
 
         networks:
             - app_network
-
         volumes:
-             - ./backend:/app
-             - ./backend/models:/app/models:ro
-
+            - ./backend:/app
+            - ./backend/models:/app/models_cache:ro
     frontend:
         build:
             context: ./frontend
