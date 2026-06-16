@@ -124,6 +124,11 @@ services:
         networks:
             - app_network
 
+        volumes:
+            - ./frontend:/app
+            - /app/node_modules
+        command: npm run dev
+
 networks:
     app_network:
         driver: bridge
