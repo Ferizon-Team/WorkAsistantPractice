@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch  } from 'vue'
 import { useTts } from '~/composables/useTts'
 import { useVoiceInput } from '~/composables/useVoiceInput'
+import { useRagStream } from '~/composables/useRagStream'
 import type { ChatMessage, RagAnswerResponse } from '~/types/chat'
 import {
   assistantMessageFromRag,
@@ -11,10 +12,43 @@ import {
 
 const config = useRuntimeConfig()
 const toast = useToast()
+const rag = useRagStream()
 
 const messages = ref<ChatMessage[]>([])
 const draft = ref('')
 const isLoading = ref(false)
+
+function getLastAssistantIndex(): number {
+  return messages.value.findLastIndex((m) => m.role === 'assistant')
+}
+
+watch(rag.fullAnswer, (newAnswer) => {
+  if (!newAnswer) return
+
+  const index = getLastAssistantIndex()
+  if (index === -1) return
+
+  const msg = messages.value[index]
+  if (!msg) return
+
+  messages.value.splice(index, 1, {
+    ...msg,
+    content: newAnswer,
+    pending: false,
+  })
+})
+
+watch(rag.isStreaming, (streaming) => {
+  if (streaming) return
+
+  const index = getLastAssistantIndex()
+  if (index === -1) return
+
+  const msg = messages.value[index]
+  if (!msg?.content || msg.pending) return
+
+  void tts.speak(msg.content)
+})
 
 async function onSubmit() {
   const text = draft.value.trim()
@@ -35,34 +69,38 @@ async function onSubmit() {
   isLoading.value = true
 
   try {
-    const response = await $fetch<RagAnswerResponse>(
-      '/api/v1/document/request',
-      {
+    await rag.ask(text)
+  } catch (wsError) {
+    console.warn('WebSocket failed, falling back to HTTP:', wsError)
+    try {
+      const response = await $fetch('/api/v1/document/request', {
         baseURL: config.public.apiUrl,
         query: { question: text },
-      }
-    )
+      }) as unknown as RagAnswerResponse
 
-    replacePendingMessage(pendingId, assistantMessageFromRag(response, pendingId))
-    const answer = messages.value.find((m) => m.id === pendingId)
-    if (answer?.content) {
-        void tts.speak(answer.content)
+      const index = messages.value.findIndex((m) => m.id === pendingId)
+      if (index !== -1) {
+        messages.value[index] = assistantMessageFromRag(response, pendingId)
+      }
+      void tts.speak(response.answer)
+    } catch (httpError) {
+      console.error(httpError)
+      const index = messages.value.findIndex((m) => m.id === pendingId)
+      if (index !== -1) {
+        messages.value[index] = {
+          id: pendingId,
+          role: 'assistant',
+          content: 'Не удалось получить ответ. Проверьте, что бэкенд запущен и база заполнена документами.',
+          createdAt: new Date(),
+          pending: false,
+        }
+      }
+      toast.add({
+        title: 'Ошибка',
+        description: 'Сервер недоступен или вернул ошибку.',
+        color: 'error',
+      })
     }
-  } catch (error) {
-    console.error(error)
-    replacePendingMessage(pendingId, {
-      id: pendingId,
-      role: 'assistant',
-      content:
-        'Не удалось получить ответ. Проверьте, что бэкенд запущен и база заполнена документами.',
-      createdAt: new Date(),
-      pending: false,
-    })
-    toast.add({
-      title: 'Ошибка',
-      description: 'Сервер недоступен или вернул ошибку.',
-      color: 'error',
-    })
   } finally {
     isLoading.value = false
   }
