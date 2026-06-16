@@ -1,9 +1,16 @@
 <script setup lang="ts">
+import { computed, toRef, watch } from 'vue'
 import type { ChatMessage } from '~/types/chat'
 
 const props = defineProps<{
   message: ChatMessage
 }>()
+
+const content = toRef(() => props.message.content)
+
+watch(content, (newContent) => {
+  console.log('Content updated:', newContent)
+})
 
 const isUser = computed(() => props.message.role === 'user')
 const isAssistant = computed(() => props.message.role === 'assistant')
@@ -63,7 +70,7 @@ const wrapperClass = computed(() =>
           v-else
           class="whitespace-pre-wrap text-sm leading-relaxed"
         >
-          {{ message.content }}
+          {{ content }}
         </p>
       </div>
 

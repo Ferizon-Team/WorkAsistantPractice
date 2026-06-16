@@ -15,7 +15,9 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiUrl: process.env.API_BASE || 'http://localhost:8000',
+      voiceMode: process.env.VOICE_MODE || 'http',
+      apiUrl: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
+      wsUrl: process.env.NUXT_PUBLIC_WS_URL || 'ws://localhost:8000',
     },
   },
 })

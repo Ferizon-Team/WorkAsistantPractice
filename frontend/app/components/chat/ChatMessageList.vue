@@ -61,7 +61,7 @@ onMounted(() => scrollToBottom(false))
     >
       <ChatMessage
         v-for="msg in messages"
-        :key="msg.id"
+        :key="msg.id + msg.content + String(msg.pending)"
         :message="msg"
       />
     </div>
