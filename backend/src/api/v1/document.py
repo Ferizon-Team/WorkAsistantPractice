@@ -79,7 +79,6 @@ async def websocket_endpoint(
                             "event": chunk.event,
                             "content": chunk.content
                         }
-                        
                         await websocket.send_json(chunk_dict)
                         
                         if chunk.event == "llm.token" and chunk.content:
