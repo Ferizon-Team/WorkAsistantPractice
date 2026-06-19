@@ -57,6 +57,11 @@ export function useRagStream() {
                         case 'llm.done':
                             state.isStreaming = false
                             break
+
+                        case 'search.not_found':
+                            state.isStreaming = false
+                            state.fullAnswer = data.content || 'Информация не найдена'
+                            break
                             
                         case 'llm.error':
                             state.isStreaming = false
