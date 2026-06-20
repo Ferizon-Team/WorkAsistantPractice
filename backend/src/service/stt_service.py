@@ -32,7 +32,7 @@ class STTService:
             raise STTModelNotLoadedError("STT model is not loaded")
 
         try:
-            segments, info = self.model.transcribe(audio_path)
+            segments, info = self.model.transcribe(audio_path, language='ru', task='transcribe',)
 
             text = " ".join(seg.text for seg in segments).strip()
 

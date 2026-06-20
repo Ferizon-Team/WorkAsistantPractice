@@ -10,6 +10,7 @@ from src.service.llm_client_service import OllamaClientService
 from src.repository.document.document_repository import DocumentRepository
 from src.repository.document.search_repository import SearchRepository
 from src.schemas.rag import AnswerQuestionResponse, Source
+import json
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -192,13 +193,20 @@ class RAGService:
 			yield StreamTextChunk(
 				event = "llm.start",
 				)
-			for word in cache_answer.split():
+			try:
+				cached_data = json.loads(cache_answer)
+				answer_text = cached_data.get("answer", "")
+			except json.JSONDecodeError:
+				answer_text = cache_answer  # fallback если не JSON
+			
+			words = answer_text.split()
+			for i, word in enumerate(words):
+				separator = " " if i < len(words) - 1 else ""
 				yield StreamTextChunk(
-					event = "llm.token",
-					content = word + " "
-					)
-
-				await asyncio.sleep(0.4)
+					event="llm.token",
+					content=word + separator
+				)
+				await asyncio.sleep(0.05)
 
 			yield StreamTextChunk(
 				event = "llm.finish",
@@ -226,8 +234,13 @@ class RAGService:
 				temperature = 0.1,
 				max_tokens = 256,
 				):
+			
+			stream_chunk = StreamTextChunk(
+				event="llm.token",
+				content=chunk
+			)
 			parts.append(chunk)
-			yield chunk
+			yield stream_chunk
 
 		yield StreamTextChunk(
 				event = "llm.finish",
@@ -237,7 +250,12 @@ class RAGService:
 		if full_answer.strip():
 			# Сохраняем результат
 			ttl = 60 * 60 * 24
-			await redis_connect.setex(cache_key, ttl, full_answer)
+			cache_data = {"answer": full_answer}
+			await redis_connect.setex(
+				cache_key, 
+				ttl, 
+				json.dumps(cache_data, ensure_ascii=False)
+			)
 
 
 

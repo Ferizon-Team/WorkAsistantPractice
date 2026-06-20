@@ -5,7 +5,8 @@ import type { VoiceServiceStatus } from '~/types/voice'
 
 export function useStt(service?: SttService) {
     const config = useRuntimeConfig()
-    const stt = service ?? createSttService(config.public.voiceMode, config.public.wsUrl)
+    const url = config.public.apiUrl || 'http://localhost:8000'
+    const stt = service ?? createSttService(config.public.voiceMode, url)
     const status = ref<VoiceServiceStatus>('idle')
     const lastResult = ref<string>('')
 

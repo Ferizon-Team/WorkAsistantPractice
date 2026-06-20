@@ -6,7 +6,8 @@ import { AudioPlayer } from '~/utils/audio/player'
 
 export function useTts(service?: TtsService) {
     const config = useRuntimeConfig()
-    const tts = service ?? createTtsService(config.public.voiceMode, config.public.wsUrl)
+    const url = config.public.apiUrl || 'http://localhost:8000'
+    const tts = service ?? createTtsService(config.public.voiceMode, url)
     const player = new AudioPlayer()
     const status = ref<VoiceServiceStatus>('idle')
 

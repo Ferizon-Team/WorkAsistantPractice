@@ -21,7 +21,7 @@ function speakWithBrowser(text: string): Promise<void> {
         const u = new SpeechSynthesisUtterance(text)
         u.lang = 'ru-RU'
         u.onend = () => resolve()
-        u.onerror = () => resplve()
+        u.onerror = () => resolve()
         speechSynthesis.speak(u)  
     })
 }
