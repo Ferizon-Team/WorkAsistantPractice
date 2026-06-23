@@ -13,6 +13,16 @@ export interface RagAnswerResponse {
     context_used: number;
 }
 
+export interface StreamContentAnswer {
+    text: string;
+    media: string;
+}
+
+export interface RagChunk {
+    event: string;
+    content: string | StreamContentAnswer | null;
+}
+
 export interface ChatMessage {
     id: string;
     role: MessageRole;
