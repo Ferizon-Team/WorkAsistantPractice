@@ -33,12 +33,7 @@ async def lifespan(app: FastAPI):
 
     if not await llm_client.check_health():
         await llm_client.pull_model()
-    app.state.rag_service = RAGService(
-        embedding_service = embedding_service,
-        llm_client = llm_client,
-        search_repository = search_repository,
-        document_repository = document_repository
-        )
+
     
     stt_model = model_manager.get_stt_model()
     if stt_model is None:
@@ -46,11 +41,20 @@ async def lifespan(app: FastAPI):
     app.state.stt_service = STTService(model=stt_model)
     
     tts_model = model_manager.get_tts_model()
-    app.state.tts_service = TTSService(
+    tts_service = TTSService(
         model=tts_model,
         output_dir="storage/tts",
         audio_format="wav",
     )
+    app.state.tts_service = tts_service
+
+    app.state.rag_service = RAGService(
+        embedding_service = embedding_service,
+        llm_client = llm_client,
+        search_repository = search_repository,
+        document_repository = document_repository,
+        tts_service = tts_service,
+        )
 
     yield
 

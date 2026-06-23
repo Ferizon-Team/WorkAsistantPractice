@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from pathlib import Path
 from typing import Optional, Protocol
 from uuid import uuid4
@@ -63,6 +64,19 @@ class TTSService:
             text_length=len(normalized_text),
         )
 
+    def synthesize_base64(self, text: str, file_name: Optional[str] = None) -> str:
+        result = self.synthesize(text, file_name)
+        audio_path = Path(result.audio_path)
+        if not audio_path.exists():
+            raise FileNotFoundError(f"Аудиофайл не был создан: {audio_path}")
+
+        with open(audio_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
+
+        # Кодируем в base64
+        audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
+
+        return audio_base64
     def _validate_text(self, text: str) -> str:
         """
         Проверяет текст перед генерацией

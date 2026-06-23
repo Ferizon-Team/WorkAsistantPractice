@@ -16,6 +16,21 @@ class LoadDocument(BaseModel):
 	text: str
 	category: str | None = None
 
-class StreamTextChunk(BaseModel):
+class StreamContentAnswer(BaseModel):
+	text : str | None = None
+	media : str | None = None
+
+
+class StreamChunkAnswer(BaseModel):
 	event : str
-	content : str | None = None
+	content : str | StreamContentAnswer | None = None
+
+class StreamContentRequest(BaseModel):
+	text : str | None = None
+	media : str | None = None
+
+class StreamRequest(BaseModel):
+	event : str
+	content : str | StreamContentRequest | None = None
+
+
