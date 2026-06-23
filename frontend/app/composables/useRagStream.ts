@@ -1,17 +1,23 @@
 import { ref, reactive, onUnmounted, toRefs } from 'vue'
+import type { RagChunk, StreamContentAnswer } from '~/types/chat'
 
-export interface RagChunk {
-    event: string
-    content: string | null
+
+interface RagStreamState {
+    isConnected: boolean;
+    isStreaming: boolean;
+    chunks: string[];
+    audioChunks: string[];
+    fullAnswer: string;
 }
 
 export function useRagStream() {
     const config = useRuntimeConfig()
     const ws = ref<WebSocket | null>(null)
-     const state = reactive({
+     const state = reactive<RagStreamState>({
         isConnected: false,
         isStreaming: false,
         chunks: [] as string[],
+        audioChunks: [] as string[],
         fullAnswer: '',
     })
 
@@ -40,16 +46,30 @@ export function useRagStream() {
                     
                     switch (data.event) {
                         case 'llm.start':
+                            if (state.isStreaming) {
+                                break
+                            }
                             state.chunks = []
+                            state.audioChunks = []
                             state.fullAnswer = ''
                             state.isStreaming = true
                             break
                             
                         case 'llm.token':
-                            if (data.content) {
+                            if (data.content && typeof data.content === 'object') {
+                                const content = data.content as StreamContentAnswer
+                                
+                                if (content.text) {
+                                    state.chunks.push(content.text)
+                                    state.fullAnswer += content.text
+                                }
+                                
+                                if (content.media) {
+                                    state.audioChunks.push(content.media)
+                                }
+                            } else if (typeof data.content === 'string') {
                                 state.chunks.push(data.content)
                                 state.fullAnswer += data.content
-                                console.log('fullAnswer updated:', state.fullAnswer)
                             }
                             break
                             
@@ -60,7 +80,13 @@ export function useRagStream() {
 
                         case 'search.not_found':
                             state.isStreaming = false
-                            state.fullAnswer = data.content || 'Информация не найдена'
+                            if (typeof data.content === 'string') {
+                                state.fullAnswer = data.content
+                            } else if (data.content && typeof data.content === 'object') {
+                                state.fullAnswer = (data.content as StreamContentAnswer).text || 'Информация не найдена'
+                            } else {
+                                state.fullAnswer = 'Информация не найдена'
+                            }
                             break
                             
                         case 'llm.error':
@@ -87,8 +113,12 @@ export function useRagStream() {
     }
 
     async function ask(question: string): Promise<void> {
+        if (state.isStreaming) {
+            console.warn('Already streaming, ignoring duplicate ask()')
+            return
+        }
         await connect()
-        
+
         if (!ws.value || ws.value.readyState !== WebSocket.OPEN) {
             throw new Error('WebSocket not connected')
         }
