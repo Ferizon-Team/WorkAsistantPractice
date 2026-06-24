@@ -54,55 +54,53 @@ async def send_request(
 @router.websocket("/ws")
 async def websocket_endpoint(
         websocket : WebSocket,
-        #db_session : SessionDep,
-        #redis_connect : CacheDep,
-        #rag_service: RagServiceDep,
+        db_session : SessionDep,
+        redis_connect : CacheDep,
+        rag_service: RagServiceDep,
         ):
     await websocket.accept()
 
-    rag_service: RAGService = websocket.app.state.rag_service
 
-    async with database.session_factory() as db_session:
-        async with create_redis_client() as redis_connect:
-            try:
-                while True:
-                    data = await websocket.receive_json()
 
-                    if data.get('event') == "question":
-                        full_answer = ""
+    try:
+        while True:
+            data = await websocket.receive_json()
 
-                        async for chunk in rag_service.answer_question_stream(
-                            redis_connect=redis_connect,
-                            session=db_session,
-                            question=data.get('question'),
-                            category=None
-                        ):
-                            chunk_dict = {
-                                "event": chunk.event,
-                                "content": chunk.content.model_dump() if chunk.content else None
-                            }
-                            await websocket.send_json(chunk_dict)
+            if data.get('event') == "question":
+                full_answer = ""
 
-                            if chunk.event == "llm.token" and chunk.content:
-                                full_answer += chunk.content.text
+                async for chunk in rag_service.answer_question_stream(
+                    redis_connect=redis_connect,
+                    session=db_session,
+                    question=data.get('question'),
+                    category=None
+                ):
+                    chunk_dict = {
+                        "event": chunk.event,
+                        "content": chunk.content.model_dump() if chunk.content else None
+                    }
+                    await websocket.send_json(chunk_dict)
 
-                        await websocket.send_json({
-                            "event": "llm.done",
-                            "content": full_answer
-                        })
+                    if chunk.event == "llm.token" and chunk.content:
+                        full_answer += chunk.content.text
 
-            except WebSocketDisconnect:
-                pass
-            except Exception as e:
-                import logging
-                logging.error(f"WebSocket error: {e}")
-                try:
-                    await websocket.send_json({
-                        "event": "llm.error",
-                        "content": str(e)
-                    })
-                except:
-                    pass
+                await websocket.send_json({
+                    "event": "llm.done",
+                    "content": full_answer
+                })
+
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        import logging
+        logging.error(f"WebSocket error: {e}")
+        try:
+            await websocket.send_json({
+                "event": "llm.error",
+                "content": str(e)
+            })
+        except:
+            pass
 
 
 
