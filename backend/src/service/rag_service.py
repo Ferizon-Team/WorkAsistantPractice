@@ -1,3 +1,4 @@
+import re
 from typing import AsyncGenerator
 import asyncio
 
@@ -141,21 +142,21 @@ class RAGService:
 
 
 	async def answer_question_stream(self,
-	                                 redis_connect: Redis,
-	                                 session: AsyncSession,
-	                                 question: str,
-	                                 category: str | None = None
-	                                 ) -> AsyncGenerator[StreamChunkAnswer, None]:
+                                     redis_connect: Redis,
+                                     session: AsyncSession,
+                                     question: str,
+                                     category: str | None = None
+                                     ) -> AsyncGenerator[StreamChunkAnswer, None]:
 
 		query_embedding = await self.embedding_service.encode_async(question)
 
 		relevant_chunks = await self.search_repository.semantic_search(
-			session = session,
-			query_embedding = query_embedding,
-			top_k = 3,
-			min_similarity = 0.65,
-			category_filter = category
-			)
+            session=session,
+            query_embedding=query_embedding,
+            top_k=3,
+            min_similarity=0.65,
+            category_filter=category
+        	)
 
 		if not relevant_chunks:
 			yield StreamChunkAnswer(
@@ -202,17 +203,16 @@ class RAGService:
 			except json.JSONDecodeError:
 				answer_text = cache_answer  # fallback если не JSON
 			
-			words = answer_text.split()
-			for i, word in enumerate(words):
-				separator = " " if i < len(words) - 1 else ""
-				done_text = word + separator
-				synthese_audio = self.tts_service.synthesize_base64(done_text)
+
+			sentences = self._split_into_sentences(answer_text)
+			for sentence in sentences:
+				audio = self._safe_tts_synthesize(sentence)
 				yield StreamChunkAnswer(
 					event="llm.token",
-					content= StreamContentAnswer(
-						text = done_text,
-						media = synthese_audio
-						)
+					content=StreamContentAnswer(
+						text=sentence + " ",
+						media=audio
+					)
 				)
 				await asyncio.sleep(0.05)
 
@@ -235,6 +235,7 @@ class RAGService:
 		yield StreamChunkAnswer(
 				event = "llm.start",
 				)
+		text_buffer = ""
 		parts = []
 		async for chunk in self.llm_client.generate_stream(
 				prompt = prompt,
@@ -242,17 +243,32 @@ class RAGService:
 				temperature = 0.1,
 				max_tokens = 256,
 				):
-
-			synthese_audio = self.tts_service.synthesize_base64(chunk)
-			stream_chunk = StreamChunkAnswer(
-				event="llm.token",
-				content=StreamContentAnswer(
-					text = chunk,
-					media = synthese_audio
-					)
-			)
 			parts.append(chunk)
-			yield stream_chunk
+			text_buffer += chunk
+
+			while True:
+				sentence, text_buffer = self._extract_sentence(text_buffer)
+				if sentence is None:
+					break
+
+				audio = self._safe_tts_synthesize(sentence)
+				yield StreamChunkAnswer(
+					event="llm.token",
+					content=StreamContentAnswer(
+						text=sentence + " ",
+						media=audio
+					)
+				)
+		if text_buffer.strip():
+				audio = self._safe_tts_synthesize(text_buffer.strip())
+				yield StreamChunkAnswer(
+					event="llm.token",
+					content=StreamContentAnswer(
+						text=text_buffer,
+						media=audio
+					)
+				)
+
 
 		yield StreamChunkAnswer(
 				event = "llm.finish",
@@ -270,6 +286,55 @@ class RAGService:
 			)
 
 
+
+	def _safe_tts_synthesize(self, text: str) -> str:
+		"""
+        Безопасный синтез TTS. Возвращает пустую строку вместо исключения.
+        """
+		if not text or not text.strip():
+			return ""
+		try:
+			return self.tts_service.synthesize_base64(text.strip())
+		except Exception as e:
+            # Логируем, но не ломаем стрим
+			import logging
+			logging.warning(f"TTS synthesis failed for text '{text[:50]}...': {e}")
+			return ""
+
+	def _split_into_sentences(self, text: str) -> list[str]:
+		"""
+        Разбивает текст на предложения по . ! ? \n
+        """
+        # Нормализуем разделители
+		# text = text.replace('!', '.').replace('?', '.')
+        # Разбиваем по точке с пробелом или переносу строки
+		raw = re.split(r'[.\n]+', text)
+		return [s.strip() for s in raw if s.strip()]
+
+	def _extract_sentence(self, buffer: str) -> tuple[str | None, str]:
+		"""
+        Вытаскивает первое законченное предложение из буфера.
+        Возвращает (sentence, оставшийся_буфер) или (None, buffer) если нет готового.
+        """
+        # Ищем ближайший разделитель
+		delimiters = ['.', '!', '?', '\n']
+        
+		min_pos = -1
+		min_delim_len = 0
+        
+		for delim in delimiters:
+			pos = buffer.find(delim)
+			if pos != -1 and (min_pos == -1 or pos < min_pos):
+				min_pos = pos
+				min_delim_len = len(delim)
+        
+		if min_pos == -1:
+			return None, buffer
+        
+		sentence = buffer[:min_pos + min_delim_len].strip()
+		remaining = buffer[min_pos + min_delim_len:]
+        
+		return sentence, remaining
 
 
 

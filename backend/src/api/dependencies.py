@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import HTTPConnection
 from fastapi import Depends, Request
 from redis.asyncio import Redis as AsyncRedis
 
@@ -11,13 +12,13 @@ from src.service.tts_service import TTSService
 from src.core.cache import get_redis_client
 
 
-def get_rag_service(request : Request) -> RAGService:
+def get_rag_service(request : HTTPConnection) -> RAGService:
     return request.app.state.rag_service
 
-def get_tts_service(request: Request) -> TTSService:
+def get_tts_service(request: HTTPConnection) -> TTSService:
     return request.app.state.tts_service
 
-def get_stt_service(request: Request) -> STTService:
+def get_stt_service(request: HTTPConnection) -> STTService:
     return request.app.state.stt_service
   
   

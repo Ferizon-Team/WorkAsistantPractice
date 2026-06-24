@@ -3,7 +3,10 @@ from src.api.dependencies import SessionDep, RagServiceDep, CacheDep
 from src.schemas.document import LoadDocument
 from src.schemas.rag import AnswerQuestionResponse
 from src.core.database import database  
-from src.core.cache import get_redis_client
+from src.core.cache import create_redis_client, get_redis_client
+from src.service.rag_service import RAGService
+from redis.asyncio import Redis as AsyncRedis
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 router = APIRouter(prefix = "/document")
@@ -57,7 +60,8 @@ async def websocket_endpoint(
         ):
     await websocket.accept()
 
-    
+
+
     try:
         while True:
             data = await websocket.receive_json()
@@ -73,12 +77,12 @@ async def websocket_endpoint(
                 ):
                     chunk_dict = {
                         "event": chunk.event,
-                        "content": chunk.content
+                        "content": chunk.content.model_dump() if chunk.content else None
                     }
                     await websocket.send_json(chunk_dict)
 
                     if chunk.event == "llm.token" and chunk.content:
-                        full_answer += chunk.content
+                        full_answer += chunk.content.text
 
                 await websocket.send_json({
                     "event": "llm.done",

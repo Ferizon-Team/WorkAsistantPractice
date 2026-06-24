@@ -38,16 +38,33 @@ watch(rag.fullAnswer, (newAnswer) => {
   })
 })
 
-watch(rag.isStreaming, (streaming) => {
-  if (streaming) return
+watch(rag.audioChunks, async (newChunks, oldChunks) => {
+    if (newChunks.length === 0) return
+    
+    const lastChunk = newChunks[newChunks.length - 1]
+    if (!lastChunk) return
+    
+    try {
+        await tts.appendChunk(lastChunk)
+    } catch (e) {
+        console.error('TTS chunk playback error:', e)
+    }
+}, { deep: true })
 
-  const index = getLastAssistantIndex()
-  if (index === -1) return
-
-  const msg = messages.value[index]
-  if (!msg?.content || msg.pending) return
-
-  void tts.speak(msg.content)
+watch(rag.isStreaming, async (streaming) => {
+    if (streaming) {
+        try {
+            await tts.initStreaming()
+        } catch (e) {
+            console.warn('Failed to init streaming audio:', e)
+        }
+    } else {
+        setTimeout(() => {
+            if (!tts.isPlaying.value) {
+                tts.stopStreaming()
+            }
+        }, 2000)
+    }
 })
 
 async function onSubmit() {
@@ -120,10 +137,10 @@ async function onRecord() {
 }
 
 function replacePendingMessage(id: string, message: ChatMessage) {
-  const index = messages.value.findIndex((m) => m.id === id)
-  if (index !== -1) {
-    messages.value[index] = message
-  }
+    const index = messages.value.findIndex((m) => m.id === id)
+    if (index !== -1) {
+        messages.value[index] = message
+    }
 }
 </script>
 

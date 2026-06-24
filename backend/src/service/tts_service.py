@@ -65,6 +65,8 @@ class TTSService:
         )
 
     def synthesize_base64(self, text: str, file_name: Optional[str] = None) -> str:
+        if not text or not text.strip():
+            return ""
         result = self.synthesize(text, file_name)
         audio_path = Path(result.audio_path)
         if not audio_path.exists():
