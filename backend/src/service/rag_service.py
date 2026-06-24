@@ -1,6 +1,7 @@
 import re
 from typing import AsyncGenerator
 import asyncio
+import logging
 
 from redis.asyncio import Redis
 from torch.utils.hipify.hipify_python import InputError
@@ -161,9 +162,10 @@ class RAGService:
 		if not relevant_chunks:
 			yield StreamChunkAnswer(
 				event = "search.not_found",
-				content =
-					"Я не нашел эту информацию в базе знаний."
-					"Обратитесь в HR отдел"
+				content = StreamContentAnswer(
+					text = "Я не нашел эту информацию в базе знаний."
+					"Обратитесь в HR отдел",
+					)
 				)
 			return
 
@@ -297,7 +299,6 @@ class RAGService:
 			return self.tts_service.synthesize_base64(text.strip())
 		except Exception as e:
             # Логируем, но не ломаем стрим
-			import logging
 			logging.warning(f"TTS synthesis failed for text '{text[:50]}...': {e}")
 			return ""
 
