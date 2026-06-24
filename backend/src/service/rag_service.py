@@ -4,7 +4,8 @@ import asyncio
 from redis.asyncio import Redis
 from torch.utils.hipify.hipify_python import InputError
 
-from src.schemas.document import StreamTextChunk
+from src.service.tts_service import TTSService
+from src.schemas.document import StreamChunkAnswer, StreamContentAnswer
 from src.service.embedding_model_service import EmbeddingModelService
 from src.service.llm_client_service import OllamaClientService
 from src.repository.document.document_repository import DocumentRepository
@@ -21,16 +22,18 @@ class RAGService:
 				 embedding_service : EmbeddingModelService,
 				 llm_client : OllamaClientService,
 				 search_repository : SearchRepository,
-				 document_repository : DocumentRepository
+				 document_repository : DocumentRepository,
+				 tts_service : TTSService,
 				 ) -> None:
 
-		if embedding_service is None or llm_client is None or search_repository is None or document_repository is None:
+		if embedding_service is None or llm_client is None or search_repository is None or document_repository is None or tts_service is None:
 			raise InputError
 
 		self.embedding_service = embedding_service
 		self.llm_client = llm_client
 		self.search_repository = search_repository
 		self.document_repository = document_repository
+		self.tts_service = tts_service
 
 		self.system_prompt = """
 		Ты - корпоративный ассистент OnboardAI компании. Твоя главная задача - помогать сотрудникам быстро находить информацию во внутренних документах.
@@ -142,7 +145,7 @@ class RAGService:
 	                                 session: AsyncSession,
 	                                 question: str,
 	                                 category: str | None = None
-	                                 ) -> AsyncGenerator[StreamTextChunk, None]:
+	                                 ) -> AsyncGenerator[StreamChunkAnswer, None]:
 
 		query_embedding = await self.embedding_service.encode_async(question)
 
@@ -155,7 +158,7 @@ class RAGService:
 			)
 
 		if not relevant_chunks:
-			yield StreamTextChunk(
+			yield StreamChunkAnswer(
 				event = "search.not_found",
 				content =
 					"Я не нашел эту информацию в базе знаний."
@@ -190,7 +193,7 @@ class RAGService:
 		if cache_answer is not None:
 
 			# Сигнал для фронта что бы структурировать сообщения
-			yield StreamTextChunk(
+			yield StreamChunkAnswer(
 				event = "llm.start",
 				)
 			try:
@@ -202,13 +205,18 @@ class RAGService:
 			words = answer_text.split()
 			for i, word in enumerate(words):
 				separator = " " if i < len(words) - 1 else ""
-				yield StreamTextChunk(
+				done_text = word + separator
+				synthese_audio = self.tts_service.synthesize_base64(done_text)
+				yield StreamChunkAnswer(
 					event="llm.token",
-					content=word + separator
+					content= StreamContentAnswer(
+						text = done_text,
+						media = synthese_audio
+						)
 				)
 				await asyncio.sleep(0.05)
 
-			yield StreamTextChunk(
+			yield StreamChunkAnswer(
 				event = "llm.finish",
 				)
 			return
@@ -224,7 +232,7 @@ class RAGService:
 		Дай точный не сухой ответ, используя только информацию из контекста выше"""
 
 		#Сигнал для фронта что бы структурировать сообщения
-		yield StreamTextChunk(
+		yield StreamChunkAnswer(
 				event = "llm.start",
 				)
 		parts = []
@@ -234,15 +242,19 @@ class RAGService:
 				temperature = 0.1,
 				max_tokens = 256,
 				):
-			
-			stream_chunk = StreamTextChunk(
+
+			synthese_audio = self.tts_service.synthesize_base64(chunk)
+			stream_chunk = StreamChunkAnswer(
 				event="llm.token",
-				content=chunk
+				content=StreamContentAnswer(
+					text = chunk,
+					media = synthese_audio
+					)
 			)
 			parts.append(chunk)
 			yield stream_chunk
 
-		yield StreamTextChunk(
+		yield StreamChunkAnswer(
 				event = "llm.finish",
 				)
 		full_answer = "".join(parts)
