@@ -2,19 +2,9 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from src.api.dependencies import SessionDep, RagServiceDep, CacheDep
 from src.schemas.document import LoadDocument
 from src.schemas.rag import AnswerQuestionResponse
-from src.core.database import database  
-from src.core.cache import create_redis_client, get_redis_client
-from src.service.rag_service import RAGService
-from redis.asyncio import Redis as AsyncRedis
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 router = APIRouter(prefix = "/document")
-
-
-async def get_db_session():
-    async with database.session_factory() as session:
-        yield session
 
 @router.post("/")
 async def load_document(

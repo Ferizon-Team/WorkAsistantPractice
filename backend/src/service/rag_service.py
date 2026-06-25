@@ -1,7 +1,9 @@
 import re
+from pathlib import Path
 from typing import AsyncGenerator
 import asyncio
 import logging
+import base64
 
 from redis.asyncio import Redis
 from torch.utils.hipify.hipify_python import InputError
@@ -26,9 +28,10 @@ class RAGService:
 				 search_repository : SearchRepository,
 				 document_repository : DocumentRepository,
 				 tts_service : TTSService,
+				 data_not_found_audio_path : Path
 				 ) -> None:
 
-		if embedding_service is None or llm_client is None or search_repository is None or document_repository is None or tts_service is None:
+		if embedding_service is None or llm_client is None or search_repository is None or document_repository is None or tts_service is None or data_not_found_audio_path is None:
 			raise InputError
 
 		self.embedding_service = embedding_service
@@ -48,6 +51,9 @@ class RAGService:
 		5. Отвечай по делу.
 		6. Отвечай так как буд то перед тобой сидит тот кто задает вопрос. А ты тот кто отвечает. Без лишних служебных предложений и слов.
 		"""
+
+		with open(data_not_found_audio_path, "rb") as f:
+			self.data_not_found_audio_base64 = base64.b64encode(f.read()).decode("utf-8")
 
 	async def answer_question(self,
 	                          redis_connect : Redis,
@@ -165,6 +171,7 @@ class RAGService:
 				content = StreamContentAnswer(
 					text = "Я не нашел эту информацию в базе знаний."
 					"Обратитесь в HR отдел",
+					media = self.data_not_found_audio_base64
 					)
 				)
 			return
