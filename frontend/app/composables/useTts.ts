@@ -37,6 +37,12 @@ export function useTts(service?: TtsService) {
     }
 
     async function appendChunk(base64Chunk: string): Promise<void> {
+        if (!base64Chunk || base64Chunk.trim() === '') return
+    
+        if (!streamingPlayer.isInitialized) {
+            await streamingPlayer.init()
+        }
+        
         if (status.value === 'idle') {
             status.value = 'playing'
         }
