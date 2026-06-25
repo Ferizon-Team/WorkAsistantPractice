@@ -52,8 +52,12 @@ class RAGService:
 		6. Отвечай так как буд то перед тобой сидит тот кто задает вопрос. А ты тот кто отвечает. Без лишних служебных предложений и слов.
 		"""
 
-		with open(data_not_found_audio_path, "rb") as f:
-			self.data_not_found_audio_base64 = base64.b64encode(f.read()).decode("utf-8")
+		if not data_not_found_audio_path.exists():
+			self.data_not_found_audio_base64 = self.tts_service.synthesize_base64("Я не нашел эту информацию в базе знаний. Обратитесь в HR отдел", data_not_found_audio_path.name)
+
+		else:
+			with open(data_not_found_audio_path, "rb") as f:
+				self.data_not_found_audio_base64 = base64.b64encode(f.read()).decode("utf-8")
 
 	async def answer_question(self,
 	                          redis_connect : Redis,

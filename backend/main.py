@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -54,6 +56,7 @@ async def lifespan(app: FastAPI):
         search_repository = search_repository,
         document_repository = document_repository,
         tts_service = tts_service,
+        data_not_found_audio_path = Path("storage/tts/data_not_found.wav")
         )
 
     yield
