@@ -11,6 +11,10 @@ export class StreamingAudioPlayer {
     private isProcessing: boolean = false
     private scheduledSources: AudioBufferSourceNode[] = []
 
+    get isInitialized(): boolean {
+        return this.audioContext !== null
+    }
+
     async init(): Promise<void> {
         if (this.audioContext) return
 

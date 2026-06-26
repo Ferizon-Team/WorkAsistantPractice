@@ -83,7 +83,12 @@ export function useRagStream() {
                             if (typeof data.content === 'string') {
                                 state.fullAnswer = data.content
                             } else if (data.content && typeof data.content === 'object') {
-                                state.fullAnswer = (data.content as StreamContentAnswer).text || 'Информация не найдена'
+                                const content = data.content as StreamContentAnswer
+                                state.fullAnswer = content.text || 'Информация не найдена'
+                                
+                                if (content.media) {
+                                    state.audioChunks.push(content.media)
+                                }
                             } else {
                                 state.fullAnswer = 'Информация не найдена'
                             }
